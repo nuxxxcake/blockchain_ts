@@ -3,28 +3,20 @@ import sha256 from "sha256";
 import { Transaction } from "./Transaction";
 
 export const getMerkleRoot = (transactions: Transaction[]) => {
-  let count = transactions.length;
+  // Get all transaction ids
+  let transactionsIds: string[] = transactions.map(tx => tx.transactionId);
 
-  let previousTreeLayer: string[] = [];
+  while (transactionsIds.length > 1) {
+    const currentTreeLayer = [];
 
-  for (const transaction of transactions) {
-    previousTreeLayer.push(transaction.transactionId);
-  }
-
-  const treeLayer: string[] = previousTreeLayer;
-
-  while (count > 1) {
-    const treeLayer = [];
-
-    for (let i = 1; i < previousTreeLayer.length; i++) {
-      treeLayer.push(sha256(previousTreeLayer[i - 1] + previousTreeLayer[i]));
+    // Generating new nodes in Merkle tree
+    for (let i = 1; i < transactionsIds.length; i++) {
+      currentTreeLayer.push(sha256(transactionsIds[i - 1] + transactionsIds[i]));
     }
 
-    count = treeLayer.length;
-    previousTreeLayer = treeLayer;
+    // Ascending to the root
+    transactionsIds = currentTreeLayer;
   }
 
-  const merkleRoot = (treeLayer.length === 1) ? treeLayer[0] : '';
-
-  return merkleRoot;
+  return transactionsIds[0] || '';
 };
